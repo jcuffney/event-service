@@ -37,3 +37,11 @@ aws cloudformation deploy \
     --capabilities CAPABILITY_NAMED_IAM \
     --parameter-overrides Project=$PROJECT Branch=$BRANCH SERVICE=$SERVICE SourceBucketArn=$SOURCE_BUCKET_ARN 
 ```
+
+## Cleanup
+
+```
+aws cloudformation delete
+
+aws s3 
+```

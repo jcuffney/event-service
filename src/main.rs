@@ -7,3 +7,13 @@ fn handler() {
 fn main() {
     handler();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_handler() {
+        handler();
+    }
+}

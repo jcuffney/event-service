@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  RustLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: 'event_service_onEvent'
+      Handler: 'bootstrap'  # Rust Lambda uses 'bootstrap' as the handler
+      Runtime: 'provided.al2'  # Use Amazon Linux 2 runtime for custom runtimes like Rust
+      Code:
+        S3Bucket: 'your-s3-bucket-name'
+        S3Key: 'path/to/your/rust-lambda.zip'
+      Role: 
+        Fn::GetAtt: 
+          - LambdaExecutionRole
+          - Arn
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'LambdaExecutionPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'

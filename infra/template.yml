@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-source"
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "event-service-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: "CloudWatchLogsFullAccess"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+
+  EventServiceOnEventLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: "event-service-onEvent"
+      Handler: "bootstrap"  # Assuming the Rust Lambda handler is named "bootstrap" after compilation
+      Runtime: provided.al2  # Use custom runtime for Rust
+      Code:
+        S3Bucket: !Ref SourceBucket
+        S3Key: "event-service-onEvent.zip"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      MemorySize: 128
+      Timeout: 6
+
+Outputs:
+
+  S3BucketName:
+    Description: "S3 Bucket for Lambda Code Storage"
+    Value: !Ref SourceBucket
+
+  LambdaFunctionName:
+    Description: "Lambda Function Name"
+    Value: !Ref EventServiceOnEventLambda
+
+  LambdaExecutionRoleArn:
+    Description: "Lambda Execution Role ARN"
+    Value: !GetAtt LambdaExecutionRole.Arn

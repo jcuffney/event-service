@@ -1,16 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+Parameters:
+
+  Project:
+    Type: String
+    Default: "cuffney"
+    Description: "Project name"
+
+  Branch:
+    Type: String
+    Default: "main"
+    Description: "Branch name"
+
+  Service:
+    Type: String
+    Default: "event-service"
+    Description: "Service name"
+
+  SourceBucketArn:
+    Type: String
+    Description: "ARN of the S3 bucket containing the Lambda deployment package"
+
 Resources:
 
-  SourceBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-source"
-
-  LambdaExecutionRole:
+  EventServiceOnEventLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-service-lambda-role"
+      RoleName: !Sub "${Project}-${Branch}-${Service}-lambda-role"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -33,26 +49,12 @@ Resources:
   EventServiceOnEventLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: "event-service-onEvent"
+      FunctionName: !Sub "${Project}-${Branch}-${Service}-onEvent"
       Handler: "bootstrap"  # Assuming the Rust Lambda handler is named "bootstrap" after compilation
       Runtime: provided.al2  # Use custom runtime for Rust
       Code:
-        S3Bucket: !Ref SourceBucket
-        S3Key: "event-service-onEvent.zip"
-      Role: !GetAtt LambdaExecutionRole.Arn
+        S3Bucket: !Ref SourceBucketArn
+        S3Key: "cuffney-main-event-service-onEvent.zip"
+      Role: !GetAtt EventServiceOnEventLambdaExecutionRole.Arn
       MemorySize: 128
       Timeout: 6
-
-Outputs:
-
-  S3BucketName:
-    Description: "S3 Bucket for Lambda Code Storage"
-    Value: !Ref SourceBucket
-
-  LambdaFunctionName:
-    Description: "Lambda Function Name"
-    Value: !Ref EventServiceOnEventLambda
-
-  LambdaExecutionRoleArn:
-    Description: "Lambda Execution Role ARN"
-    Value: !GetAtt LambdaExecutionRole.Arn
